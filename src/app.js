@@ -1,6 +1,8 @@
 const express = require("express");
 const path = require("path");
 
+const namespaceRouter = require("./modules/namespace/namespace.route");
+
 const app = express();
 
 /*Cors Plicy*/
@@ -13,6 +15,8 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.static(path.join(__dirname, "..", "public")));
 
 /*Routes*/
+
+app.use("/namespaces", namespaceRouter);
 
 /*404 Error Handler*/
 app.use((req, res) => {
