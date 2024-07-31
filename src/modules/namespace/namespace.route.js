@@ -2,7 +2,7 @@ const express = require("express");
 const controller = require("./namespace.controller");
 const { multerStorage } = require("../../middlewares/multer");
 
-const uploader = multerStorage("/public/room");
+const uploader = multerStorage("public/room");
 
 const router = express.Router();
 
