@@ -12,12 +12,12 @@ exports.multerStorage = (destination, allowTypes = /png|jpg|jpeg|webp/) => {
       cb(null, destination);
     },
 
-    filename: (req, file, cd) => {
-      const unique = new Date.now() * Math.floor(Math.random() * 999999);
+    filename: (req, file, cb) => {
+      const unique = Date.now() * Math.floor(Math.random() * 999999);
 
       const ext = path.extname(file.originalname);
 
-      cb(null, `${unique}${ext}`);
+      cb(null,`${unique}${ext}`);
     },
   });
 
