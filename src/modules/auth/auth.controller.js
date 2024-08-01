@@ -1,6 +1,7 @@
 const userModel = require("../../models/User");
 const { registerValidator, loginValidator } = require("./auth.validator");
 const jwt = require("jsonwebtoken");
+const bcrybt = require("bcryptjs");
 
 exports.register = async (req, res, next) => {
   try {
@@ -32,12 +33,42 @@ exports.register = async (req, res, next) => {
 };
 
 exports.login = async (req, res, next) => {
-    try {
-    } catch (error) {
-      next(error);
+  try {
+    const { identifier, password } = req.body;
+
+    await loginValidator.validate({ identifier, password });
+
+    const user = await userModel.findOne({
+      $or: [{ username: identifier }, { phone: identifier }],
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "not found user" });
     }
-  };
-  
+
+    const isCorrectpassword = await bcrybt.compare(password, user.password);
+
+    if (!isCorrectpassword) {
+      return res
+        .status(422)
+        .json({ message: "identifier or password is incorrect" });
+    }
+
+    const accessToken = jwt.sign({ userID: user._id }, process.env.SECRET_KEY, {
+      expiresIn: "30day",
+    });
+
+    res.cookie("access-token", accessToken, {
+      httpOnly: true,
+      maxAge: 2592000000,
+      sameSite: "strict",
+    });
+
+    return res.status(200).json({ message: "user login successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
 
 exports.me = async (req, res, next) => {
   try {
