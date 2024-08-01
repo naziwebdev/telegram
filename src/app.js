@@ -1,5 +1,6 @@
 const express = require("express");
 const path = require("path");
+const cors = require('cors')
 const cookieParser = require("cookie-parser");
 
 const namespaceRouter = require("./modules/namespace/namespace.route");
@@ -8,6 +9,7 @@ const authRouter = require("./modules/auth/auth.route");
 const app = express();
 
 /*Cors Plicy*/
+app.use(cors())
 
 /*Body Parser*/
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
