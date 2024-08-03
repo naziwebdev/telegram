@@ -34,6 +34,20 @@ const locationSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+const mediaSchema = new mongoose.Schema(
+  {
+    path: {
+      type: String,
+      required: true,
+    },
+    sender: {
+      ref: "User",
+      required: true,
+    },
+  },
+  { timestamps: true }
+);
+
 const roomSchema = new mongoose.Schema(
   {
     title: {
@@ -44,8 +58,12 @@ const roomSchema = new mongoose.Schema(
       type: [messageSchema],
       default: [],
     },
-    locations:{
+    locations: {
       type: [locationSchema],
+      default: [],
+    },
+    medias: {
+      type: [mediaSchema],
       default: [],
     },
     image: {
