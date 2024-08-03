@@ -1,4 +1,5 @@
 const namespaceModel = require("../models/Chat");
+const userModel = require("../models/User");
 
 exports.initConnection = (io) => {
   io.on("connection", async (socket) => {
@@ -18,6 +19,8 @@ exports.getNamespacesRoom = async (io) => {
       });
       socket.emit("rooms", mainNamespace.rooms);
 
+      getMessage(io, socket);
+
       socket.on("joining", async (newRoom) => {
         const lastRoom = Array.from(socket.rooms)[1];
 
@@ -33,7 +36,6 @@ exports.getNamespacesRoom = async (io) => {
           (room) => room.title === newRoom
         );
         socket.emit("roomInfo", roomInfo);
-        getMessage(socket);
 
         socket.on("disconnect", async () => {
           await getRoomOnlineUsers(io, mainNamespace.href, newRoom);
@@ -43,7 +45,7 @@ exports.getNamespacesRoom = async (io) => {
   });
 };
 
-const getMessage = (socket) => {
+const getMessage = (io, socket) => {
   socket.on("newMsg", async (data) => {
     const { message, roomName, userID } = data;
 
@@ -60,6 +62,25 @@ const getMessage = (socket) => {
         },
       }
     );
+
+    io.of(namespace.href).in(roomName).emit("newMsg", data);
+  });
+  detectIsTyping(io, socket);
+};
+
+const detectIsTyping = (io, socket) => {
+  socket.on("isTyping", async (data) => {
+    const { userID, roomName, isTyping } = data;
+
+    const namespace = await namespaceModel.findOne({ "rooms.title": roomName });
+    const user = await userModel.findOne({ _id: userID });
+    io.of(namespace.href).in(roomName).emit("isTyping", {
+      isTyping,
+      user: user.username,
+    });
+    if (!isTyping) {
+      await getRoomOnlineUsers(io, namespace.href, roomName);
+    }
   });
 };
 
