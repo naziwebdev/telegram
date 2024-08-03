@@ -20,6 +20,7 @@ exports.getNamespacesRoom = async (io) => {
       socket.emit("rooms", mainNamespace.rooms);
 
       getMessage(io, socket);
+      getLocation(io, socket);
 
       socket.on("joining", async (newRoom) => {
         const lastRoom = Array.from(socket.rooms)[1];
@@ -63,7 +64,7 @@ const getMessage = (io, socket) => {
       }
     );
 
-    io.of(namespace.href).in(roomName).emit("newMsg", data);
+    io.of(namespace.href).in(roomName).emit("confirmMsg", data);
   });
   detectIsTyping(io, socket);
 };
@@ -81,6 +82,32 @@ const detectIsTyping = (io, socket) => {
     if (!isTyping) {
       await getRoomOnlineUsers(io, namespace.href, roomName);
     }
+  });
+};
+
+const getLocation = (io, socket) => {
+  socket.on("newLocation", async (data) => {
+    const { location, sender, roomName } = data;
+
+    const namespace = await namespaceModel.findOne({ "rooms.title": roomName });
+
+    await namespaceModel.updateOne(
+      {
+        _id: namespace._id,
+        "rooms.title": roomName,
+      },
+      {
+        $push: {
+          "rooms.$.locations": {
+            x: location.x,
+            y: location.y,
+            sender,
+          },
+        },
+      }
+    );
+
+    io.of(namespace.href).in(roomName).emit("confirmLocation", data);
   });
 };
 
