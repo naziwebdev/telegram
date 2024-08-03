@@ -1,5 +1,7 @@
 const namespaceModel = require("../models/Chat");
 const userModel = require("../models/User");
+const fs = require("fs");
+const path = require("path");
 
 exports.initConnection = (io) => {
   io.on("connection", async (socket) => {
@@ -21,6 +23,7 @@ exports.getNamespacesRoom = async (io) => {
 
       getMessage(io, socket);
       getLocation(io, socket);
+      getMedia(io, socket);
 
       socket.on("joining", async (newRoom) => {
         const lastRoom = Array.from(socket.rooms)[1];
@@ -108,6 +111,40 @@ const getLocation = (io, socket) => {
     );
 
     io.of(namespace.href).in(roomName).emit("confirmLocation", data);
+  });
+};
+
+const getMedia = (io, socket) => {
+  socket.on("newMedia", async (data) => {
+    const { filename, sender, file, roomName } = data;
+
+    const namespace = await namespaceModel.findOne({ "rooms.title": roomName });
+
+    const ext = path.extname(filename);
+    const uniqueFile = Date.now() * Math.floor(Math.random() * 99999);
+
+    const pathFile = `medias/${String(uniqueFile + ext)}`;
+
+    fs.writeFile(`public/${pathFile}`, file, async (err) => {
+      if (!err) {
+        await namespaceModel.updateOne(
+          {
+            _id: namespace._id,
+            "rooms.title": roomName,
+          },
+          {
+            $push: {
+              "rooms.$.medias": {
+                path:pathFile,
+                sender,
+              },
+            },
+          }
+        );
+      }
+
+      io.of(namespace.href).in(roomName).emit("confirmMedia", data);
+    });
   });
 };
 
