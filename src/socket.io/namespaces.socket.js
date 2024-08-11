@@ -16,9 +16,21 @@ exports.getNamespacesRoom = async (io) => {
 
   namespaces.forEach((namespace) => {
     io.of(namespace.href).on("connection", async (socket) => {
-      const mainNamespace = await namespaceModel.findOne({
-        _id: namespace._id,
-      });
+      const mainNamespace = await namespaceModel
+        .findOne({
+          _id: namespace._id,
+        })
+        .populate({
+          path: "rooms",
+          populate: {
+            path: "messages",
+            populate: {
+              path: "sender", // This will populate the user associated with each message
+              model: "User", // Replace with your actual User model name
+              select:"-password"
+            },
+          },
+        });
       socket.emit("rooms", mainNamespace.rooms);
 
       getMessage(io, socket);
@@ -53,13 +65,13 @@ const getMessage = (io, socket) => {
   socket.on("newMsg", async (data) => {
     const { message, roomName, userID } = data;
 
-    const namespace = await namespaceModel.findOne({ "rooms.title": roomName });
+    const namespace = await namespaceModel.findOne({ "rooms.title": roomName })
 
-    await namespaceModel.updateOne(
+    await namespaceModel.findOneAndUpdate(
       { _id: namespace._id, "rooms.title": roomName },
       {
         $push: {
-          "rooms.$.message": {
+          "rooms.$.messages": {
             sender: userID,
             message,
           },
@@ -135,7 +147,7 @@ const getMedia = (io, socket) => {
           {
             $push: {
               "rooms.$.medias": {
-                path:pathFile,
+                path: pathFile,
                 sender,
               },
             },

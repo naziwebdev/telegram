@@ -4,7 +4,7 @@ const messageSchema = new mongoose.Schema(
   {
     sender: {
       type: mongoose.Types.ObjectId,
-      ref: "User",
+      ref:"User",
       required: true,
     },
     message: {
@@ -41,6 +41,7 @@ const mediaSchema = new mongoose.Schema(
       required: true,
     },
     sender: {
+      type:mongoose.Types.ObjectId,
       ref: "User",
       required: true,
     },

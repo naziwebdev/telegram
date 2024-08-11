@@ -1,6 +1,6 @@
 const express = require("express");
 const path = require("path");
-const cors = require('cors')
+const cors = require("cors");
 const cookieParser = require("cookie-parser");
 
 const namespaceRouter = require("./modules/namespace/namespace.route");
@@ -9,7 +9,16 @@ const authRouter = require("./modules/auth/auth.route");
 const app = express();
 
 /*Cors Plicy*/
-app.use(cors())
+
+const corsOptions = {
+  origin: "http://localhost:3000",
+  methods: "GET, PUT, POST, DELETE , OPTIONS",
+  credentials: true,
+  allowedHeaders:
+    "Content-Type, Authorization, Content-Length, X-Requested-With",
+  optionsSuccessStatus: 200,
+};
+app.use(cors(corsOptions));
 
 /*Body Parser*/
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
